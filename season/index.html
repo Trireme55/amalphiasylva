@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Amalphia Sylva | Belly Dance Classes in Biscoe, NC</title>
+<style>
+body{margin:0;background:#17121B}
+#season-loading{color:#F5EEE2;font-family:system-ui,sans-serif;padding:48px;text-align:center}
+#season-loading a{color:#C9A35B}
+/* Seasonal overlay */
+.season-banner{position:relative;z-index:50;text-align:center;padding:10px 16px;font:500 15px/1.4 'Jost',system-ui,sans-serif;letter-spacing:.04em;color:#fff;background:var(--s-bg,#1E6B63)}
+.season-banner a{color:inherit;text-decoration:underline;margin-left:10px;opacity:.85}
+.season-tint{position:fixed;inset:0;z-index:40;pointer-events:none;background:var(--s-tint,transparent);mix-blend-mode:soft-light}
+.season-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:45;pointer-events:none}
+</style>
+</head><body>
+<div id="season-loading">Loading… <noscript><br><a href="/">Open the main site</a></noscript></div>
+<script>
+(function(){
+  // ---------- 1. Pick the season from today's date (or ?season=name to preview) ----------
+  var SEASONS={
+    valentine:{greet:"Happy Valentine's Day",bg:"#9B2D4E",tint:"rgba(190,40,80,.18)",kind:"hearts",colors:["#E0507A","#F3A6BC","#C9A35B"]},
+    spring:{greet:"Happy Spring",bg:"#4C8B6B",tint:"rgba(120,200,150,.14)",kind:"petals",colors:["#F7C6D3","#FBE3EA","#CFE8B8"]},
+    summer:{greet:"Happy Summer",bg:"#B8742A",tint:"rgba(255,190,90,.16)",kind:"fireflies",colors:["#FFE08A","#FFC857","#FFF3C4"]},
+    autumn:{greet:"Happy Autumn",bg:"#9A4B1C",tint:"rgba(210,110,40,.16)",kind:"leaves",colors:["#D2691E","#C9A35B","#A0301E","#E0952F"]},
+    halloween:{greet:"Happy Halloween",bg:"#4B2A6B",tint:"rgba(120,60,180,.20)",kind:"bats",colors:["#E8782A","#8A5CC8"]},
+    winter:{greet:"Warm winter wishes",bg:"#2C5A78",tint:"rgba(120,170,230,.16)",kind:"snow",colors:["#FFFFFF","#DCEBFA"]},
+    holidays:{greet:"Happy Holidays",bg:"#7A1F2B",tint:"rgba(200,40,50,.14)",kind:"snow",colors:["#FFFFFF","#F5E3B0","#DCEBFA"]}
+  };
+  function pick(d){
+    var m=d.getMonth()+1,day=d.getDate();
+    if(m===10)return"halloween";
+    if(m===2&&day<=14)return"valentine";
+    if(m===12&&day>=6||m===1&&day<=6)return"holidays";
+    if(m===12||m===1||m===2)return"winter";
+    if(m>=3&&m<=5)return"spring";
+    if(m>=6&&m<=8)return"summer";
+    return"autumn"; // Sep, Nov, early Dec
+  }
+  var q=(location.search.match(/[?&]season=(\w+)/)||[])[1];
+  var key=SEASONS[q]?q:pick(new Date());
+  var S=SEASONS[key];
+
+  // ---------- 2. Load the main page's content so there is only one page to edit ----------
+  fetch("/",{credentials:"same-origin"}).then(function(r){return r.text()}).then(function(html){
+    var doc=new DOMParser().parseFromString(html,"text/html");
+    doc.querySelectorAll("head link[rel=stylesheet],head style").forEach(function(n){document.head.appendChild(n.cloneNode(true))});
+    document.body.innerHTML=doc.body.innerHTML;
+    document.body.querySelectorAll("img[src]").forEach(function(i){var s=i.getAttribute("src");if(s&&!/^(\/|https?:)/.test(s))i.setAttribute("src","/"+s)});
+    // keep same-page links inside this page; Home link goes to the top
+    start();
+  }).catch(function(){
+    document.getElementById("season-loading").innerHTML='Sorry, this page could not load. <a href="/">Open the main site</a>';
+  });
+
+  // ---------- 3. Overlay: banner, color tint, falling particles ----------
+  function start(){
+    var root=document.documentElement;
+    root.style.setProperty("--s-bg",S.bg);root.style.setProperty("--s-tint",S.tint);
+    var b=document.createElement("div");b.className="season-banner";
+    b.innerHTML=S.greet+' from Amalphia Sylva<a href="/">Main site</a>';
+    document.body.insertBefore(b,document.body.firstChild);
+    var t=document.createElement("div");t.className="season-tint";document.body.appendChild(t);
+    if(window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches)return;
+    var c=document.createElement("canvas");c.className="season-canvas";c.setAttribute("aria-hidden","true");document.body.appendChild(c);
+    var x=c.getContext("2d"),W,H,dpr=Math.min(window.devicePixelRatio||1,2);
+    function size(){W=innerWidth;H=innerHeight;c.width=W*dpr;c.height=H*dpr;x.setTransform(dpr,0,0,dpr,0,0)}
+    size();addEventListener("resize",size);
+    var k=S.kind,N=Math.round(Math.min(70,Math.max(24,W/22)));if(k==="bats")N=Math.round(N/3);var P=[];
+    function mk(initial){
+      var p={x:Math.random()*W,y:initial?Math.random()*H:-20,r:3+Math.random()*5,
+        vy:.5+Math.random()*1.1,vx:(Math.random()-.5)*.6,a:Math.random()*6.28,va:(Math.random()-.5)*.04,
+        col:S.colors[Math.floor(Math.random()*S.colors.length)],ph:Math.random()*6.28,o:.55+Math.random()*.4};
+      if(k==="snow"){p.r=1.5+Math.random()*3;p.vy=.4+Math.random()*.9}
+      if(k==="fireflies"){p.y=Math.random()*H;p.vy=-.15+Math.random()*.3;p.vx=(Math.random()-.5)*.4;p.r=2+Math.random()*3}
+      if(k==="bats"){p.y=Math.random()*H*.7;p.vy=0;p.vx=(Math.random()<.5?-1:1)*(.8+Math.random()*1.4);p.r=14+Math.random()*10}
+      return p}
+    for(var i=0;i<N;i++)P.push(mk(true));
+    function heart(r){x.beginPath();x.moveTo(0,r*.35);x.bezierCurveTo(-r,-r*.4,-r*.5,-r,0,-r*.45);x.bezierCurveTo(r*.5,-r,r,-r*.4,0,r*.35);x.fill()}
+    function leaf(r){x.beginPath();x.moveTo(0,-r*1.4);x.quadraticCurveTo(r*1.1,-r*.2,0,r*1.4);x.quadraticCurveTo(-r*1.1,-r*.2,0,-r*1.4);x.fill()}
+    var T=0;
+    function frame(){
+      T+=.016;x.clearRect(0,0,W,H);
+      for(var i=0;i<P.length;i++){var p=P[i];x.save();x.globalAlpha=p.o;x.fillStyle=p.col;
+        if(k==="bats"){
+          p.x+=p.vx;p.y+=Math.sin(T*2+p.ph)*.9;
+          x.font=p.r+"px serif";x.textBaseline="middle";x.fillText("🦇",p.x,p.y);
+          if(p.x<-40||p.x>W+40){P[i]=mk(true);P[i].x=p.vx>0?-30:W+30}
+        }else if(k==="fireflies"){
+          p.x+=p.vx+Math.sin(T+p.ph)*.3;p.y+=p.vy;
+          var g=.5+.5*Math.sin(T*2+p.ph);x.globalAlpha=.25+.65*g;x.shadowColor=p.col;x.shadowBlur=14;
+          x.beginPath();x.arc(p.x,p.y,p.r,0,6.28);x.fill();
+          if(p.y<-10||p.y>H+10||p.x<-10||p.x>W+10)P[i]=mk(true);
+        }else{
+          p.y+=p.vy;p.x+=p.vx+Math.sin(T+p.ph)*.5;p.a+=p.va;
+          x.translate(p.x,p.y);x.rotate(p.a);
+          if(k==="snow"){x.beginPath();x.arc(0,0,p.r,0,6.28);x.fill()}
+          else if(k==="hearts")heart(p.r*1.6);
+          else if(k==="petals"){x.beginPath();x.ellipse(0,0,p.r*1.3,p.r*.7,0,0,6.28);x.fill()}
+          else leaf(p.r*1.1);
+          if(p.y>H+20)P[i]=mk(false);
+        }
+        x.restore()}
+      requestAnimationFrame(frame)}
+    frame();
+  }
+})();
+</script>
+</body></html>
